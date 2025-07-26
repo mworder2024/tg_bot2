@@ -27,9 +27,11 @@ export class TelegramBotService implements OnModuleInit {
   async onModuleInit() {
     const botToken = this.configService.get<string>('BOT_TOKEN');
     const nodeEnv = this.configService.get<string>('NODE_ENV');
+    const skipBot = this.configService.get<boolean>('SKIP_BOT', false);
     
-    if (!botToken || botToken === 'your_bot_token_here') {
-      this.logger.warn('Bot token not configured. Bot will not start.');
+    if (!botToken || botToken === 'your_bot_token_here' || skipBot) {
+      this.logger.warn('Bot token not configured or SKIP_BOT=true. Bot will not start.');
+      this.logger.warn('Use SKIP_BOT=true for local development without Telegram access.');
       return;
     }
 

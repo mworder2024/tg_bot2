@@ -97,6 +97,11 @@ export const configValidation = Joi.object({
   LOG_LEVEL: Joi.string()
     .valid('error', 'warn', 'info', 'debug', 'verbose')
     .default('info'),
+    
+  // Development Configuration
+  SKIP_BOT: Joi.boolean()
+    .default(false)
+    .description('Skip Telegram bot initialization for local development'),
 });
 
 /**
