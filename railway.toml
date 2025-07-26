@@ -3,7 +3,7 @@ builder = "NIXPACKS"
 buildCommand = "npm ci && npm run build"
 
 [deploy]
-startCommand = "node dist/main.js"
+startCommand = "node dist/main"
 healthcheckPath = "/api/v1/ping"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

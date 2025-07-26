@@ -24,8 +24,39 @@ export const configValidation = Joi.object({
 
   // Telegram Bot Configuration (optional for MVP)
   BOT_TOKEN: Joi.string()
-    .default('your_bot_token_here')
-    .description('Telegram Bot API token (optional for MVP)'),
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.string().required(),
+      otherwise: Joi.string().default('your_bot_token_here')
+    })
+    .description('Telegram Bot API token (required in production)'),
+    
+  // JWT Configuration (for API security)
+  JWT_SECRET: Joi.string()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.string().required(),
+      otherwise: Joi.string().default('dev-jwt-secret-not-for-production')
+    })
+    .description('JWT secret key'),
+    
+  // Database URL (Railway provides this)
+  DATABASE_URL: Joi.string()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.optional(),
+      otherwise: Joi.optional()
+    })
+    .description('PostgreSQL connection URL from Railway'),
+    
+  // Admin Configuration (optional for MVP)
+  ADMIN_TELEGRAM_IDS: Joi.string()
+    .default('123456789')
+    .description('Comma-separated admin Telegram IDs'),
+    
+  SUPER_ADMIN_ID: Joi.number()
+    .default(123456789)
+    .description('Super admin Telegram ID'),
 
   // Rate Limiting Configuration
   RATE_LIMIT_TTL: Joi.number()
@@ -77,6 +108,10 @@ export interface ConfigInterface {
   DB_TYPE: string;
   DB_DATABASE: string;
   BOT_TOKEN: string;
+  JWT_SECRET: string;
+  DATABASE_URL?: string;
+  ADMIN_TELEGRAM_IDS: string;
+  SUPER_ADMIN_ID: number;
   RATE_LIMIT_TTL: number;
   RATE_LIMIT_LIMIT: number;
   CORS_ORIGIN: string;
