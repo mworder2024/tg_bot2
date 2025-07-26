@@ -98,11 +98,11 @@ async function bootstrap(): Promise<void> {
     });
 
     // Start the application
-    await app.listen(port);
+    await app.listen(port, '0.0.0.0');
     
     logger.log(`🚀 RPS Tournament Bot is running on port ${port}`);
     logger.log(`🌍 Environment: ${nodeEnv}`);
-    logger.log(`📊 Health check: http://localhost:${port}/api/v1/health`);
+    logger.log(`📊 Health check: http://localhost:${port}/api/v1/ping`);
     
     if (nodeEnv === 'development') {
       logger.log(`📖 API Docs: http://localhost:${port}/api/docs`);
