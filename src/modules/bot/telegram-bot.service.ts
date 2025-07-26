@@ -26,6 +26,7 @@ export class TelegramBotService implements OnModuleInit {
 
   async onModuleInit() {
     const botToken = this.configService.get<string>('BOT_TOKEN');
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
     
     if (!botToken || botToken === 'your_bot_token_here') {
       this.logger.warn('Bot token not configured. Bot will not start.');
@@ -34,7 +35,7 @@ export class TelegramBotService implements OnModuleInit {
 
     try {
       // Try different connection methods
-      this.logger.log('Attempting to initialize Telegram bot...');
+      this.logger.log(`Attempting to initialize Telegram bot in ${nodeEnv} mode...`);
       
       // Create bot with custom fetch options
       this.bot = new Bot<BotContext>(botToken, {
@@ -67,13 +68,15 @@ export class TelegramBotService implements OnModuleInit {
         const botInfo = await this.bot.api.getMe();
         this.logger.log(`Bot connected: @${botInfo.username} (${botInfo.first_name})`);
         
-        // Start with long polling
+        // Start with long polling (non-blocking)
         this.bot.start({
           drop_pending_updates: true,
           allowed_updates: ['message', 'callback_query'],
           onStart: (botInfo) => {
             this.logger.log(`✅ Telegram bot started successfully as @${botInfo.username}`);
           },
+        }).catch((err) => {
+          this.logger.error('Bot polling error:', err);
         });
 
       } catch (connectError) {

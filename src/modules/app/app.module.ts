@@ -63,7 +63,9 @@ import { configValidation } from '../../config/config.validation.mvp';
     UserModule,
     GameModule,
     // TournamentModule, // Disabled for MVP (SQLite compatibility)
-    BotModule, // Re-enabled for Telegram bot functionality
+    
+    // Bot module - only in development or when BOT_TOKEN is properly configured
+    ...(process.env.BOT_TOKEN && process.env.BOT_TOKEN !== 'your_bot_token_here' ? [BotModule] : []),
 
     // Feature modules (disabled for MVP)
     // NotificationModule,
