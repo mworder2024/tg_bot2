@@ -37,15 +37,35 @@ export class TelegramBotService implements OnModuleInit {
       // Try different connection methods
       this.logger.log(`Attempting to initialize Telegram bot in ${nodeEnv} mode...`);
       
-      // Create bot with custom fetch options
-      this.bot = new Bot<BotContext>(botToken, {
+      // Check for proxy configuration
+      const proxyUrl = this.configService.get<string>('HTTPS_PROXY') || 
+                       this.configService.get<string>('HTTP_PROXY') || 
+                       process.env.HTTPS_PROXY || 
+                       process.env.HTTP_PROXY;
+
+      const botConfig: any = {
         client: {
-          timeoutSeconds: 60,
+          timeoutSeconds: 120, // Increase timeout for slow connections
+          retryLimit: 3,
           baseFetchConfig: {
             compress: true,
           },
         },
-      });
+      };
+
+      // Add proxy if configured
+      if (proxyUrl) {
+        this.logger.log(`Using proxy: ${proxyUrl}`);
+        try {
+          const { HttpsProxyAgent } = require('https-proxy-agent');
+          botConfig.client.baseFetchConfig.agent = new HttpsProxyAgent(proxyUrl);
+        } catch (error) {
+          this.logger.warn('https-proxy-agent not available, continuing without proxy');
+        }
+      }
+
+      // Create bot with custom fetch options
+      this.bot = new Bot<BotContext>(botToken, botConfig);
 
       // Add session middleware
       this.bot.use(session({ initial: (): SessionData => ({}) }));
