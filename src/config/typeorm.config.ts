@@ -12,20 +12,25 @@ const configService = new ConfigService();
 const isProduction = configService.get('NODE_ENV') === 'production';
 const databaseUrl = configService.get('DATABASE_URL');
 
-export default new DataSource({
-  type: isProduction && databaseUrl ? 'postgres' : 'sqlite',
-  ...(isProduction && databaseUrl
-    ? {
-        url: databaseUrl,
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      }
-    : {
-        database: './data/gamebot.db',
-      }),
-  entities: [User, UserStats, Game],
-  migrations: ['dist/migrations/*.js'],
-  synchronize: false,
-  logging: false,
-});
+const dataSourceConfig = isProduction && databaseUrl
+  ? {
+      type: 'postgres' as const,
+      url: databaseUrl,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+      entities: [User, UserStats, Game],
+      migrations: ['dist/migrations/*.js'],
+      synchronize: false,
+      logging: false,
+    }
+  : {
+      type: 'sqlite' as const,
+      database: './data/gamebot.db',
+      entities: [User, UserStats, Game],
+      migrations: ['dist/migrations/*.js'],
+      synchronize: false,
+      logging: false,
+    };
+
+export default new DataSource(dataSourceConfig);

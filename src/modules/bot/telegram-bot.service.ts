@@ -42,9 +42,6 @@ export class TelegramBotService implements OnModuleInit {
           timeoutSeconds: 60,
           baseFetchConfig: {
             compress: true,
-            headers: {
-              'User-Agent': 'RPS-Tournament-Bot/1.0',
-            },
           },
         },
       });

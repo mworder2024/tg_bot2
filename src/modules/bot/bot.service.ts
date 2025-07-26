@@ -35,8 +35,9 @@ export class BotService implements OnModuleInit {
 
     try {
       // Try with custom fetch implementation
-      const fetch = require('node-fetch');
       const HttpsProxyAgent = require('https-proxy-agent');
+      
+      const proxyAgent = process.env.HTTPS_PROXY ? new HttpsProxyAgent.HttpsProxyAgent(process.env.HTTPS_PROXY) : undefined;
       
       this.bot = new Bot<BotContext>(botToken, {
         client: {
@@ -44,12 +45,8 @@ export class BotService implements OnModuleInit {
           timeoutSeconds: 120,
           // Custom base fetch config
           baseFetchConfig: {
-            agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : undefined,
+            agent: proxyAgent,
             compress: true,
-            timeout: 120000, // 2 minutes
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (compatible; Telegram Bot)',
-            },
           },
           // Allow using local Bot API server if needed
           apiRoot: process.env.BOT_API_ROOT || 'https://api.telegram.org',
