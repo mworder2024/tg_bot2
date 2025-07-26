@@ -5,7 +5,7 @@ import { User } from '../entities/user.entity';
 import { UserStats } from '../entities/user-stats.entity';
 import { Game } from '../entities/game.entity';
 
-// Load environment variables
+// Load environment variables for database configuration
 config();
 
 const configService = new ConfigService();
