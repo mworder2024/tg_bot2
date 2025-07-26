@@ -4,6 +4,11 @@ import { Bot, Context, session, SessionFlavor, webhookCallback } from 'grammy';
 import { UserService } from '../user/user.service';
 import { GameEngineService } from '../../services/game-engine.service';
 import { GameMove, GameStatus } from '../../entities/game.entity';
+import * as https from 'https';
+import * as dns from 'dns';
+
+// Force IPv4 for DNS resolution
+dns.setDefaultResultOrder('ipv4first');
 
 interface SessionData {
   activeGameId?: string;
@@ -45,25 +50,36 @@ export class TelegramBotService implements OnModuleInit {
                        process.env.HTTPS_PROXY || 
                        process.env.HTTP_PROXY;
 
+      // Create custom HTTPS agent that forces IPv4
+      const httpsAgent = new https.Agent({
+        family: 4, // Force IPv4
+        rejectUnauthorized: true,
+        keepAlive: false,
+        timeout: 60000,
+      });
+
       const botConfig: any = {
         client: {
           timeoutSeconds: 120, // Increase timeout for slow connections
           retryLimit: 3,
           baseFetchConfig: {
             compress: true,
+            agent: httpsAgent, // Use IPv4 agent
           },
         },
       };
 
-      // Add proxy if configured
+      // Add proxy if configured (overrides the IPv4 agent)
       if (proxyUrl) {
         this.logger.log(`Using proxy: ${proxyUrl}`);
         try {
           const { HttpsProxyAgent } = require('https-proxy-agent');
           botConfig.client.baseFetchConfig.agent = new HttpsProxyAgent(proxyUrl);
         } catch (error) {
-          this.logger.warn('https-proxy-agent not available, continuing without proxy');
+          this.logger.warn('https-proxy-agent not available, using IPv4 agent');
         }
+      } else {
+        this.logger.log('Using IPv4-only connection (IPv6 disabled)');
       }
 
       // Create bot with custom fetch options
