@@ -1,0 +1,33 @@
+{
+  "displayName": "E2E Tests",
+  "preset": "@nestjs/testing",
+  "testEnvironment": "node",
+  "rootDir": "../",
+  "testMatch": ["<rootDir>/test/e2e/**/*.e2e-spec.ts"],
+  "setupFilesAfterEnv": ["<rootDir>/test/e2e-setup.ts"],
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/*.e2e-spec.ts",
+    "!src/**/*.interface.ts",
+    "!src/**/*.dto.ts",
+    "!src/**/*.enum.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "./coverage/e2e",
+  "coverageReporters": ["text", "lcov", "html"],
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapping": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@test/(.*)$": "<rootDir>/test/$1"
+  },
+  "testTimeout": 120000,
+  "maxWorkers": 1,
+  "verbose": true,
+  "forceExit": true,
+  "detectOpenHandles": true,
+  "runInBand": true
+}

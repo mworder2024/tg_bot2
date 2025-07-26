@@ -1,0 +1,514 @@
+# Auto-Scaling Configuration for RPS Tournament Bot
+# Kubernetes Horizontal Pod Autoscaler and Vertical Pod Autoscaler
+# Production-ready auto-scaling for 1000+ concurrent users
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rps-tournament-bot
+  labels:
+    name: rps-tournament-bot
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rps-bot-config
+  namespace: rps-tournament-bot
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  MAX_TOURNAMENT_SIZE: "256"
+  MAX_CONCURRENT_GAMES: "1000"
+  WEBSOCKET_HEARTBEAT_INTERVAL: "30000"
+  CACHE_TTL: "300"
+  DB_POOL_SIZE: "20"
+  REDIS_POOL_SIZE: "10"
+
+---
+# Main application deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rps-tournament-bot
+  namespace: rps-tournament-bot
+  labels:
+    app: rps-tournament-bot
+    version: v1.0.0
+spec:
+  replicas: 3  # Initial replica count
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: rps-tournament-bot
+  template:
+    metadata:
+      labels:
+        app: rps-tournament-bot
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - rps-tournament-bot
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: app
+        image: rps-tournament-bot:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        - containerPort: 3001
+          name: websocket
+        envFrom:
+        - configMapRef:
+            name: rps-bot-config
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: rps-bot-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: rps-bot-secrets
+              key: redis-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: rps-bot-secrets
+              key: jwt-secret
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: rps-bot-secrets
+              key: telegram-token
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+      terminationGracePeriodSeconds: 30
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rps-tournament-bot-hpa
+  namespace: rps-tournament-bot
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rps-tournament-bot
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  # CPU-based scaling
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Memory-based scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics scaling
+  - type: Pods
+    pods:
+      metric:
+        name: websocket_connections_per_pod
+      target:
+        type: AverageValue
+        averageValue: "100"
+  - type: Pods
+    pods:
+      metric:
+        name: active_tournaments_per_pod
+      target:
+        type: AverageValue
+        averageValue: "50"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 3
+        periodSeconds: 60
+      selectPolicy: Max
+
+---
+# Vertical Pod Autoscaler (Optional - for automatic resource adjustment)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: rps-tournament-bot-vpa
+  namespace: rps-tournament-bot
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rps-tournament-bot
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: app
+      minAllowed:
+        cpu: 100m
+        memory: 128Mi
+      maxAllowed:
+        cpu: 2000m
+        memory: 2Gi
+      controlledResources: ["cpu", "memory"]
+
+---
+# Service for the application
+apiVersion: v1
+kind: Service
+metadata:
+  name: rps-tournament-service
+  namespace: rps-tournament-bot
+  labels:
+    app: rps-tournament-bot
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 8080
+    targetPort: 3001
+    protocol: TCP
+    name: websocket
+  selector:
+    app: rps-tournament-bot
+
+---
+# Load Balancer Service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: rps-tournament-lb
+  namespace: rps-tournament-bot
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "10"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "6"
+    service.beta.kubernetes.io/aws-load-balancer-healthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-unhealthy-threshold: "2"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 8080
+    targetPort: 3001
+    protocol: TCP
+    name: websocket
+  selector:
+    app: rps-tournament-bot
+
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rps-tournament-bot-pdb
+  namespace: rps-tournament-bot
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: rps-tournament-bot
+
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rps-tournament-bot-netpol
+  namespace: rps-tournament-bot
+spec:
+  podSelector:
+    matchLabels:
+      app: rps-tournament-bot
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000
+    - protocol: TCP
+      port: 3001
+  egress:
+  # Allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow database access
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis access
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: cache
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow external API calls (Telegram)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+# Custom Resource Definition for Tournament Autoscaler
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: tournamentautoscalers.gaming.rps-bot.com
+spec:
+  group: gaming.rps-bot.com
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              maxConcurrentTournaments:
+                type: integer
+                minimum: 1
+                maximum: 1000
+              scalingThresholds:
+                type: object
+                properties:
+                  tournamentUtilization:
+                    type: integer
+                    minimum: 1
+                    maximum: 100
+                  gameCompletionRate:
+                    type: number
+                    minimum: 0.1
+                    maximum: 1.0
+          status:
+            type: object
+            properties:
+              currentTournaments:
+                type: integer
+              scaling:
+                type: boolean
+              lastScaleTime:
+                type: string
+                format: date-time
+  scope: Namespaced
+  names:
+    plural: tournamentautoscalers
+    singular: tournamentautoscaler
+    kind: TournamentAutoscaler
+
+---
+# Tournament-specific autoscaler instance
+apiVersion: gaming.rps-bot.com/v1
+kind: TournamentAutoscaler
+metadata:
+  name: main-tournament-autoscaler
+  namespace: rps-tournament-bot
+spec:
+  maxConcurrentTournaments: 500
+  scalingThresholds:
+    tournamentUtilization: 80  # Scale when 80% of tournament capacity is used
+    gameCompletionRate: 0.8    # Scale based on game completion rate
+
+---
+# ServiceMonitor for Prometheus monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rps-tournament-bot-metrics
+  namespace: rps-tournament-bot
+  labels:
+    app: rps-tournament-bot
+spec:
+  selector:
+    matchLabels:
+      app: rps-tournament-bot
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+# KEDA ScaledObject for event-driven autoscaling
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: rps-tournament-bot-keda
+  namespace: rps-tournament-bot
+spec:
+  scaleTargetRef:
+    name: rps-tournament-bot
+  minReplicaCount: 3
+  maxReplicaCount: 30
+  pollingInterval: 30
+  cooldownPeriod: 300
+  triggers:
+  # Redis-based scaling for active tournaments
+  - type: redis
+    metadata:
+      address: redis-service.cache.svc.cluster.local:6379
+      listName: tournament_queue
+      listLength: "10"
+  # Prometheus-based scaling for WebSocket connections
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-server.monitoring.svc.cluster.local:9090
+      metricName: websocket_active_connections
+      threshold: "100"
+      query: sum(websocket_active_connections)
+  # Cron-based scaling for peak hours
+  - type: cron
+    metadata:
+      timezone: UTC
+      start: "0 18 * * *"  # Scale up at 6 PM UTC
+      end: "0 2 * * *"     # Scale down at 2 AM UTC
+      desiredReplicas: "10"
+
+---
+# Secrets (should be created separately for security)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rps-bot-secrets
+  namespace: rps-tournament-bot
+type: Opaque
+data:
+  # Base64 encoded values (replace with actual values)
+  database-url: cG9zdGdyZXNxbDovL3VzZXI6cGFzc0BkYi5leGFtcGxlLmNvbTo1NDMyL3Jwc2JvdA==
+  redis-url: cmVkaXM6Ly9yZWRpcy5leGFtcGxlLmNvbTo2Mzc5
+  jwt-secret: c3VwZXJfc2VjcmV0X2p3dF9rZXk=
+  telegram-token: Ym90X3Rva2VuX2hlcmU=
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rps-tournament-bot-ingress
+  namespace: rps-tournament-bot
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/websocket-services: "rps-tournament-service"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "1000"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - api.rps-tournament.com
+    - ws.rps-tournament.com
+    secretName: rps-tournament-tls
+  rules:
+  - host: api.rps-tournament.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rps-tournament-service
+            port:
+              number: 80
+  - host: ws.rps-tournament.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rps-tournament-service
+            port:
+              number: 8080

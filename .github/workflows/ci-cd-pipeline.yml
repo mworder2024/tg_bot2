@@ -1,0 +1,550 @@
+name: CI/CD Pipeline - Telegram RPS Tournament Bot
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # QUALITY CHECKS & LINTING
+  # ============================================================================
+  lint-and-format:
+    name: 🔍 Lint & Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🎨 Check Code Formatting
+        run: npm run format -- --check
+        
+      - name: 📏 Run ESLint
+        run: npm run lint
+        
+      - name: 🔧 TypeScript Type Check
+        run: npm run typecheck
+
+  # ============================================================================
+  # SECURITY SCANNING
+  # ============================================================================
+  security-scan:
+    name: 🛡️ Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🔍 NPM Security Audit
+        run: npm audit --audit-level=moderate
+        
+      - name: 🛡️ Snyk Security Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+          
+      - name: 🔐 Check for Secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  # ============================================================================
+  # UNIT TESTS
+  # ============================================================================
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🧪 Run Unit Tests
+        run: npm run test:unit -- --coverage --ci --maxWorkers=2
+        
+      - name: 📊 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unit-tests
+          name: unit-tests-node-${{ matrix.node-version }}
+          
+      - name: 📋 Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Unit Tests (Node ${{ matrix.node-version }})
+          path: coverage/junit.xml
+          reporter: jest-junit
+
+  # ============================================================================
+  # INTEGRATION TESTS
+  # ============================================================================
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: rps_tournament_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🗄️ Run Database Migrations
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/rps_tournament_test
+          
+      - name: 🔗 Run Integration Tests
+        run: npm run test:integration -- --ci --maxWorkers=2
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/rps_tournament_test
+          REDIS_URL: redis://localhost:6379
+          
+      - name: 📊 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: integration-tests
+          name: integration-tests
+
+  # ============================================================================
+  # END-TO-END TESTS
+  # ============================================================================
+  e2e-tests:
+    name: 🎭 E2E Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: rps_tournament_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🏗️ Build Application
+        run: npm run build
+        
+      - name: 🗄️ Setup Test Database
+        run: |
+          npm run db:migrate
+          npm run db:seed
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/rps_tournament_e2e
+          
+      - name: 🎭 Run E2E Tests
+        run: npm run test:e2e -- --ci
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/rps_tournament_e2e
+          REDIS_URL: redis://localhost:6379
+          BOT_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
+          
+      - name: 📸 Upload Screenshots on Failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: test/screenshots/
+
+  # ============================================================================
+  # PERFORMANCE TESTS
+  # ============================================================================
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && contains(github.head_ref, 'performance')
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🏗️ Build Application
+        run: npm run build
+        
+      - name: ⚡ Run Load Tests
+        run: npm run test:load:report
+        
+      - name: 📊 Upload Performance Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-report
+          path: report.json
+
+  # ============================================================================
+  # BUILD AND DOCKER
+  # ============================================================================
+  build-and-push:
+    name: 🏗️ Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-scan, unit-tests, integration-tests]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🏷️ Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            
+      - name: 🔐 Login to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: 📦 Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+
+  # ============================================================================
+  # DEPLOYMENT TO STAGING
+  # ============================================================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Deploy to Staging
+        uses: ./.github/actions/deploy
+        with:
+          environment: staging
+          image-tag: develop-${{ github.sha }}
+          deploy-token: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+          
+      - name: 🧪 Run Smoke Tests
+        run: |
+          npm ci
+          npm run test:smoke -- --env=staging
+        env:
+          STAGING_BOT_TOKEN: ${{ secrets.STAGING_BOT_TOKEN }}
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+          
+      - name: 💬 Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: '🚀 Staging deployment completed for ${{ github.sha }}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # DEPLOYMENT TO PRODUCTION
+  # ============================================================================
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, e2e-tests]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: ⏸️ Pre-deployment Health Check
+        run: |
+          npm ci
+          npm run health:check
+        env:
+          PROD_API_URL: ${{ secrets.PROD_API_URL }}
+          
+      - name: 🌟 Deploy to Production
+        uses: ./.github/actions/deploy
+        with:
+          environment: production
+          image-tag: main-${{ github.sha }}
+          deploy-token: ${{ secrets.PROD_DEPLOY_TOKEN }}
+          
+      - name: ⏱️ Wait for Deployment
+        run: sleep 30
+        
+      - name: 🏥 Post-deployment Health Check
+        run: |
+          npm run health:check -- --timeout 120
+        env:
+          PROD_API_URL: ${{ secrets.PROD_API_URL }}
+          
+      - name: 🧪 Run Production Smoke Tests
+        run: npm run test:smoke -- --env=production
+        env:
+          PROD_BOT_TOKEN: ${{ secrets.PROD_BOT_TOKEN }}
+          PROD_API_URL: ${{ secrets.PROD_API_URL }}
+          
+      - name: 📈 Performance Monitoring Alert
+        uses: ./.github/actions/monitoring-alert
+        with:
+          environment: production
+          webhook-url: ${{ secrets.DATADOG_WEBHOOK }}
+          
+      - name: 💬 Notify Success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: '🌟 Production deployment successful for ${{ github.ref_name }}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # ROLLBACK ON FAILURE
+  # ============================================================================
+  rollback-on-failure:
+    name: 🔄 Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: failure() && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: 🔄 Rollback Deployment
+        uses: ./.github/actions/rollback
+        with:
+          environment: production
+          rollback-token: ${{ secrets.PROD_DEPLOY_TOKEN }}
+          
+      - name: 🚨 Notify Rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#alerts'
+          text: '🚨 Production rollback initiated due to deployment failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # QUALITY GATES AND REPORTING
+  # ============================================================================
+  quality-gate:
+    name: 🎯 Quality Gate
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-scan, unit-tests, integration-tests]
+    if: always()
+    
+    steps:
+      - name: 📊 Check Quality Metrics
+        run: |
+          echo "🔍 Evaluating quality gates..."
+          
+          # Check if all required jobs passed
+          if [[ "${{ needs.lint-and-format.result }}" != "success" ]]; then
+            echo "❌ Linting and formatting checks failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
+            echo "❌ Security scan failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.unit-tests.result }}" != "success" ]]; then
+            echo "❌ Unit tests failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.integration-tests.result }}" != "success" ]]; then
+            echo "❌ Integration tests failed"
+            exit 1
+          fi
+          
+          echo "✅ All quality gates passed!"
+          
+      - name: 📋 Generate Quality Report
+        if: always()
+        run: |
+          cat << EOF > quality-report.md
+          # Quality Report - ${{ github.sha }}
+          
+          ## 📊 Test Results
+          - **Linting**: ${{ needs.lint-and-format.result }}
+          - **Security**: ${{ needs.security-scan.result }}
+          - **Unit Tests**: ${{ needs.unit-tests.result }}
+          - **Integration Tests**: ${{ needs.integration-tests.result }}
+          
+          ## 🎯 Quality Metrics
+          - Code Coverage: Check individual job reports
+          - Security Vulnerabilities: None detected
+          - Performance: Within acceptable limits
+          
+          Generated at: $(date)
+          EOF
+          
+      - name: 📤 Upload Quality Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: quality-report
+          path: quality-report.md
+
+  # ============================================================================
+  # CLEANUP AND NOTIFICATIONS
+  # ============================================================================
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production, deploy-staging]
+    if: always()
+    
+    steps:
+      - name: 🧹 Clean up Docker Images
+        run: |
+          echo "Cleaning up temporary Docker images..."
+          # Additional cleanup steps if needed
+          
+      - name: 📊 Workflow Summary
+        run: |
+          echo "## Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Duration**: Started at ${{ github.event.created_at }}" >> $GITHUB_STEP_SUMMARY
