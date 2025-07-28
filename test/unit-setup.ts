@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
 
 // Mock console methods to reduce test noise
 const originalConsole = { ...console };
@@ -19,19 +18,6 @@ afterAll(() => {
   // Restore console methods
   Object.assign(console, originalConsole);
 });
-
-// Global test utilities
-global.testUtils = {
-  sleep: (ms: number) => new Promise(resolve => setTimeout(resolve, ms)),
-  generateId: () => `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-  createMockLogger: () => ({
-    log: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-    verbose: jest.fn(),
-  }),
-};
 
 // Mock NestJS Logger globally
 jest.mock('@nestjs/common', () => ({
