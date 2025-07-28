@@ -18,7 +18,6 @@ afterAll(() => {
   // Restore console methods
   Object.assign(console, originalConsole);
 });
-
 // Mock NestJS Logger globally
 jest.mock('@nestjs/common', () => ({
   ...jest.requireActual('@nestjs/common'),

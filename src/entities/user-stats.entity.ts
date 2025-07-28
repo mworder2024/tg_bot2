@@ -6,23 +6,23 @@ import {
   UpdateDateColumn,
   OneToOne,
   Index,
-} from 'typeorm';
-import { IsNumber, Min, IsDate } from 'class-validator';
-import { User } from './user.entity';
+} from "typeorm";
+import { IsNumber, Min, IsDate } from "class-validator";
+import { User } from "./user.entity";
 
 /**
  * UserStats Entity - Comprehensive user statistics for RPS gameplay
- * 
+ *
  * @description Stores detailed statistics for each user including game performance,
  * tournament participation, streaks, and historical data for analytics and ranking.
- * 
+ *
  * Features:
  * - Comprehensive game statistics tracking
  * - Tournament performance metrics
  * - Streak tracking (current and best)
  * - Time-based statistics (daily, weekly, monthly)
  * - Advanced analytics data points
- * 
+ *
  * @example
  * ```typescript
  * const stats = new UserStats();
@@ -33,22 +33,22 @@ import { User } from './user.entity';
  * await statsRepository.save(stats);
  * ```
  */
-@Entity('user_stats')
-@Index(['gamesPlayed'])
-@Index(['gamesWon'])
-@Index(['winRate'])
-@Index(['tournamentsWon'])
-@Index(['currentStreak'])
-@Index(['bestStreak'])
-@Index(['lastGameAt'])
+@Entity("user_stats")
+@Index(["gamesPlayed"])
+@Index(["gamesWon"])
+@Index(["winRate"])
+@Index(["tournamentsWon"])
+@Index(["currentStreak"])
+@Index(["bestStreak"])
+@Index(["lastGameAt"])
 export class UserStats {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   /**
    * Reference to the user these stats belong to
    */
-  @OneToOne(() => User, user => user.stats, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, (user) => user.stats, { onDelete: "CASCADE" })
   user: User;
 
   // Game Statistics
@@ -56,7 +56,7 @@ export class UserStats {
   /**
    * Total number of games played
    */
-  @Column({ name: 'games_played', default: 0 })
+  @Column({ name: "games_played", default: 0 })
   @IsNumber()
   @Min(0)
   gamesPlayed: number;
@@ -64,7 +64,7 @@ export class UserStats {
   /**
    * Total number of games won
    */
-  @Column({ name: 'games_won', default: 0 })
+  @Column({ name: "games_won", default: 0 })
   @IsNumber()
   @Min(0)
   gamesWon: number;
@@ -72,7 +72,7 @@ export class UserStats {
   /**
    * Total number of games lost
    */
-  @Column({ name: 'games_lost', default: 0 })
+  @Column({ name: "games_lost", default: 0 })
   @IsNumber()
   @Min(0)
   gamesLost: number;
@@ -80,7 +80,7 @@ export class UserStats {
   /**
    * Total number of games that ended in a draw
    */
-  @Column({ name: 'games_drawn', default: 0 })
+  @Column({ name: "games_drawn", default: 0 })
   @IsNumber()
   @Min(0)
   gamesDrawn: number;
@@ -88,7 +88,13 @@ export class UserStats {
   /**
    * Calculated win rate as percentage (0-100)
    */
-  @Column({ name: 'win_rate', type: 'decimal', precision: 5, scale: 2, default: 0 })
+  @Column({
+    name: "win_rate",
+    type: "decimal",
+    precision: 5,
+    scale: 2,
+    default: 0,
+  })
   @IsNumber()
   @Min(0)
   winRate: number;
@@ -98,7 +104,7 @@ export class UserStats {
   /**
    * Number of times user played ROCK
    */
-  @Column({ name: 'rock_played', default: 0 })
+  @Column({ name: "rock_played", default: 0 })
   @IsNumber()
   @Min(0)
   rockPlayed: number;
@@ -106,7 +112,7 @@ export class UserStats {
   /**
    * Number of times user played PAPER
    */
-  @Column({ name: 'paper_played', default: 0 })
+  @Column({ name: "paper_played", default: 0 })
   @IsNumber()
   @Min(0)
   paperPlayed: number;
@@ -114,7 +120,7 @@ export class UserStats {
   /**
    * Number of times user played SCISSORS
    */
-  @Column({ name: 'scissors_played', default: 0 })
+  @Column({ name: "scissors_played", default: 0 })
   @IsNumber()
   @Min(0)
   scissorsPlayed: number;
@@ -122,7 +128,7 @@ export class UserStats {
   /**
    * Wins with ROCK move
    */
-  @Column({ name: 'rock_wins', default: 0 })
+  @Column({ name: "rock_wins", default: 0 })
   @IsNumber()
   @Min(0)
   rockWins: number;
@@ -130,7 +136,7 @@ export class UserStats {
   /**
    * Wins with PAPER move
    */
-  @Column({ name: 'paper_wins', default: 0 })
+  @Column({ name: "paper_wins", default: 0 })
   @IsNumber()
   @Min(0)
   paperWins: number;
@@ -138,7 +144,7 @@ export class UserStats {
   /**
    * Wins with SCISSORS move
    */
-  @Column({ name: 'scissors_wins', default: 0 })
+  @Column({ name: "scissors_wins", default: 0 })
   @IsNumber()
   @Min(0)
   scissorsWins: number;
@@ -148,7 +154,7 @@ export class UserStats {
   /**
    * Total number of tournaments participated in
    */
-  @Column({ name: 'tournaments_played', default: 0 })
+  @Column({ name: "tournaments_played", default: 0 })
   @IsNumber()
   @Min(0)
   tournamentsPlayed: number;
@@ -156,7 +162,7 @@ export class UserStats {
   /**
    * Total number of tournaments won
    */
-  @Column({ name: 'tournaments_won', default: 0 })
+  @Column({ name: "tournaments_won", default: 0 })
   @IsNumber()
   @Min(0)
   tournamentsWon: number;
@@ -164,7 +170,7 @@ export class UserStats {
   /**
    * Total number of tournaments reached finals
    */
-  @Column({ name: 'tournament_finals', default: 0 })
+  @Column({ name: "tournament_finals", default: 0 })
   @IsNumber()
   @Min(0)
   tournamentFinals: number;
@@ -172,7 +178,7 @@ export class UserStats {
   /**
    * Total number of tournaments reached semi-finals
    */
-  @Column({ name: 'tournament_semifinals', default: 0 })
+  @Column({ name: "tournament_semifinals", default: 0 })
   @IsNumber()
   @Min(0)
   tournamentSemifinals: number;
@@ -180,7 +186,13 @@ export class UserStats {
   /**
    * Tournament win rate as percentage
    */
-  @Column({ name: 'tournament_win_rate', type: 'decimal', precision: 5, scale: 2, default: 0 })
+  @Column({
+    name: "tournament_win_rate",
+    type: "decimal",
+    precision: 5,
+    scale: 2,
+    default: 0,
+  })
   @IsNumber()
   @Min(0)
   tournamentWinRate: number;
@@ -190,14 +202,14 @@ export class UserStats {
   /**
    * Current winning streak
    */
-  @Column({ name: 'current_streak', default: 0 })
+  @Column({ name: "current_streak", default: 0 })
   @IsNumber()
   currentStreak: number;
 
   /**
    * Best winning streak ever achieved
    */
-  @Column({ name: 'best_streak', default: 0 })
+  @Column({ name: "best_streak", default: 0 })
   @IsNumber()
   @Min(0)
   bestStreak: number;
@@ -205,14 +217,14 @@ export class UserStats {
   /**
    * Current losing streak
    */
-  @Column({ name: 'current_losing_streak', default: 0 })
+  @Column({ name: "current_losing_streak", default: 0 })
   @IsNumber()
   currentLosingStreak: number;
 
   /**
    * Worst losing streak ever
    */
-  @Column({ name: 'worst_losing_streak', default: 0 })
+  @Column({ name: "worst_losing_streak", default: 0 })
   @IsNumber()
   @Min(0)
   worstLosingStreak: number;
@@ -222,7 +234,7 @@ export class UserStats {
   /**
    * Games played today
    */
-  @Column({ name: 'games_today', default: 0 })
+  @Column({ name: "games_today", default: 0 })
   @IsNumber()
   @Min(0)
   gamesToday: number;
@@ -230,7 +242,7 @@ export class UserStats {
   /**
    * Games played this week
    */
-  @Column({ name: 'games_this_week', default: 0 })
+  @Column({ name: "games_this_week", default: 0 })
   @IsNumber()
   @Min(0)
   gamesThisWeek: number;
@@ -238,7 +250,7 @@ export class UserStats {
   /**
    * Games played this month
    */
-  @Column({ name: 'games_this_month', default: 0 })
+  @Column({ name: "games_this_month", default: 0 })
   @IsNumber()
   @Min(0)
   gamesThisMonth: number;
@@ -246,7 +258,7 @@ export class UserStats {
   /**
    * Most games played in a single day
    */
-  @Column({ name: 'best_daily_games', default: 0 })
+  @Column({ name: "best_daily_games", default: 0 })
   @IsNumber()
   @Min(0)
   bestDailyGames: number;
@@ -256,7 +268,13 @@ export class UserStats {
   /**
    * Average game duration in seconds
    */
-  @Column({ name: 'avg_game_duration', type: 'decimal', precision: 8, scale: 2, default: 0 })
+  @Column({
+    name: "avg_game_duration",
+    type: "decimal",
+    precision: 8,
+    scale: 2,
+    default: 0,
+  })
   @IsNumber()
   @Min(0)
   avgGameDuration: number;
@@ -264,7 +282,7 @@ export class UserStats {
   /**
    * Total time spent playing (in seconds)
    */
-  @Column({ name: 'total_play_time', default: 0 })
+  @Column({ name: "total_play_time", default: 0 })
   @IsNumber()
   @Min(0)
   totalPlayTime: number;
@@ -272,48 +290,48 @@ export class UserStats {
   /**
    * Preferred move (most used move)
    */
-  @Column({ name: 'preferred_move', length: 20, nullable: true })
-  preferredMove?: 'ROCK' | 'PAPER' | 'SCISSORS';
+  @Column({ name: "preferred_move", length: 20, nullable: true })
+  preferredMove?: "ROCK" | "PAPER" | "SCISSORS";
 
   /**
    * Most successful move (highest win rate)
    */
-  @Column({ name: 'most_successful_move', length: 20, nullable: true })
-  mostSuccessfulMove?: 'ROCK' | 'PAPER' | 'SCISSORS';
+  @Column({ name: "most_successful_move", length: 20, nullable: true })
+  mostSuccessfulMove?: "ROCK" | "PAPER" | "SCISSORS";
 
   // Timestamps
 
   /**
    * Last time user played a game
    */
-  @Column({ name: 'last_game_at', nullable: true })
+  @Column({ name: "last_game_at", nullable: true })
   @IsDate()
   lastGameAt?: Date;
 
   /**
    * Last time user won a game
    */
-  @Column({ name: 'last_win_at', nullable: true })
+  @Column({ name: "last_win_at", nullable: true })
   @IsDate()
   lastWinAt?: Date;
 
   /**
    * Last time user won a tournament
    */
-  @Column({ name: 'last_tournament_win_at', nullable: true })
+  @Column({ name: "last_tournament_win_at", nullable: true })
   @IsDate()
   lastTournamentWinAt?: Date;
 
   /**
    * When statistics were created
    */
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
   /**
    * When statistics were last updated
    */
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
   // Computed Properties
@@ -329,13 +347,15 @@ export class UserStats {
    * Calculate tournament win percentage
    */
   get tournamentWinPercentage(): number {
-    return this.tournamentsPlayed > 0 ? this.tournamentsWon / this.tournamentsPlayed : 0;
+    return this.tournamentsPlayed > 0
+      ? this.tournamentsWon / this.tournamentsPlayed
+      : 0;
   }
 
   /**
    * Get the user's most played move
    */
-  get mostPlayedMove(): 'ROCK' | 'PAPER' | 'SCISSORS' | null {
+  get mostPlayedMove(): "ROCK" | "PAPER" | "SCISSORS" | null {
     const moves = {
       ROCK: this.rockPlayed,
       PAPER: this.paperPlayed,
@@ -348,7 +368,7 @@ export class UserStats {
     for (const [move, count] of Object.entries(moves)) {
       if (count > maxCount) {
         maxCount = count;
-        maxMove = move as 'ROCK' | 'PAPER' | 'SCISSORS';
+        maxMove = move as "ROCK" | "PAPER" | "SCISSORS";
       }
     }
 
@@ -362,7 +382,8 @@ export class UserStats {
     return {
       rock: this.rockPlayed > 0 ? this.rockWins / this.rockPlayed : 0,
       paper: this.paperPlayed > 0 ? this.paperWins / this.paperPlayed : 0,
-      scissors: this.scissorsPlayed > 0 ? this.scissorsWins / this.scissorsPlayed : 0,
+      scissors:
+        this.scissorsPlayed > 0 ? this.scissorsWins / this.scissorsPlayed : 0,
     };
   }
 
@@ -386,9 +407,9 @@ export class UserStats {
    * Record a game result and update statistics
    */
   recordGameResult(
-    result: 'win' | 'loss' | 'draw',
-    move: 'ROCK' | 'PAPER' | 'SCISSORS',
-    gameDuration?: number
+    result: "win" | "loss" | "draw",
+    move: "ROCK" | "PAPER" | "SCISSORS",
+    gameDuration?: number,
   ): void {
     // Update basic counters
     this.gamesPlayed++;
@@ -398,46 +419,46 @@ export class UserStats {
 
     // Update move counters
     switch (move) {
-      case 'ROCK':
+      case "ROCK":
         this.rockPlayed++;
         break;
-      case 'PAPER':
+      case "PAPER":
         this.paperPlayed++;
         break;
-      case 'SCISSORS':
+      case "SCISSORS":
         this.scissorsPlayed++;
         break;
     }
 
     // Update result counters and streaks
     switch (result) {
-      case 'win':
+      case "win":
         this.gamesWon++;
-        if (move === 'ROCK') this.rockWins++;
-        if (move === 'PAPER') this.paperWins++;
-        if (move === 'SCISSORS') this.scissorsWins++;
-        
+        if (move === "ROCK") this.rockWins++;
+        if (move === "PAPER") this.paperWins++;
+        if (move === "SCISSORS") this.scissorsWins++;
+
         this.currentStreak++;
         this.currentLosingStreak = 0;
-        
+
         if (this.currentStreak > this.bestStreak) {
           this.bestStreak = this.currentStreak;
         }
-        
+
         this.lastWinAt = new Date();
         break;
-        
-      case 'loss':
+
+      case "loss":
         this.gamesLost++;
         this.currentStreak = 0;
         this.currentLosingStreak++;
-        
+
         if (this.currentLosingStreak > this.worstLosingStreak) {
           this.worstLosingStreak = this.currentLosingStreak;
         }
         break;
-        
-      case 'draw':
+
+      case "draw":
         this.gamesDrawn++;
         // Draws don't affect streaks
         break;
@@ -449,7 +470,8 @@ export class UserStats {
 
     // Update game duration stats
     if (gameDuration) {
-      const totalDuration = (this.avgGameDuration * (this.gamesPlayed - 1)) + gameDuration;
+      const totalDuration =
+        this.avgGameDuration * (this.gamesPlayed - 1) + gameDuration;
       this.avgGameDuration = totalDuration / this.gamesPlayed;
       this.totalPlayTime += gameDuration;
     }
@@ -463,27 +485,28 @@ export class UserStats {
    * Record tournament participation
    */
   recordTournamentResult(
-    placement: 'winner' | 'finalist' | 'semifinalist' | 'participant'
+    placement: "winner" | "finalist" | "semifinalist" | "participant",
   ): void {
     this.tournamentsPlayed++;
 
     switch (placement) {
-      case 'winner':
+      case "winner":
         this.tournamentsWon++;
         this.tournamentFinals++;
         this.tournamentSemifinals++;
         this.lastTournamentWinAt = new Date();
         break;
-      case 'finalist':
+      case "finalist":
         this.tournamentFinals++;
         this.tournamentSemifinals++;
         break;
-      case 'semifinalist':
+      case "semifinalist":
         this.tournamentSemifinals++;
         break;
     }
 
-    this.tournamentWinRate = (this.tournamentsWon / this.tournamentsPlayed) * 100;
+    this.tournamentWinRate =
+      (this.tournamentsWon / this.tournamentsPlayed) * 100;
   }
 
   /**
@@ -525,13 +548,13 @@ export class UserStats {
    */
   private updateMostSuccessfulMove(): void {
     const winRates = this.moveWinRates;
-    let bestMove: 'ROCK' | 'PAPER' | 'SCISSORS' | null = null;
+    let bestMove: "ROCK" | "PAPER" | "SCISSORS" | null = null;
     let bestRate = 0;
 
     for (const [move, rate] of Object.entries(winRates)) {
       if (rate > bestRate) {
         bestRate = rate;
-        bestMove = move.toUpperCase() as 'ROCK' | 'PAPER' | 'SCISSORS';
+        bestMove = move.toUpperCase() as "ROCK" | "PAPER" | "SCISSORS";
       }
     }
 
@@ -544,11 +567,36 @@ export class UserStats {
    * Get comprehensive statistics summary
    */
   getSummary(): {
-    games: { played: number; won: number; lost: number; drawn: number; winRate: number };
-    tournaments: { played: number; won: number; finals: number; winRate: number };
-    streaks: { current: number; best: number; currentLosing: number; worst: number };
-    moves: { preferred?: string; mostSuccessful?: string; winRates: Record<string, number> };
-    activity: { today: number; thisWeek: number; thisMonth: number; lastGame?: Date };
+    games: {
+      played: number;
+      won: number;
+      lost: number;
+      drawn: number;
+      winRate: number;
+    };
+    tournaments: {
+      played: number;
+      won: number;
+      finals: number;
+      winRate: number;
+    };
+    streaks: {
+      current: number;
+      best: number;
+      currentLosing: number;
+      worst: number;
+    };
+    moves: {
+      preferred?: string;
+      mostSuccessful?: string;
+      winRates: Record<string, number>;
+    };
+    activity: {
+      today: number;
+      thisWeek: number;
+      thisMonth: number;
+      lastGame?: Date;
+    };
   } {
     return {
       games: {
