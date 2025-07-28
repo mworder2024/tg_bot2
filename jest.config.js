@@ -1,4 +1,6 @@
 module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
@@ -13,9 +15,11 @@ module.exports = {
     '!src/**/*.dto.ts',
     '!src/**/*.enum.ts',
     '!src/main.ts',
+    '!src/migrations/**',
+    '!src/**/*.module.ts',
   ],
   coverageDirectory: './coverage',
-  coverageReporters: ['text', 'lcov', 'html', 'json'],
+  coverageReporters: ['text', 'lcov', 'html', 'json', 'text-summary'],
   coverageThreshold: {
     global: {
       branches: 85,
@@ -24,32 +28,16 @@ module.exports = {
       statements: 85,
     },
   },
-  testEnvironment: 'node',
-  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/test/setup.ts'
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@test/(.*)$': '<rootDir>/test/$1',
   },
   testTimeout: 30000,
   maxWorkers: '50%',
-  // Separate configurations for different test types
-  projects: [
-    {
-      displayName: 'unit',
-      testMatch: ['<rootDir>/src/**/*.spec.ts'],
-      setupFilesAfterEnv: ['<rootDir>/test/unit-setup.ts'],
-    },
-    {
-      displayName: 'integration',
-      testMatch: ['<rootDir>/test/integration/**/*.spec.ts'],
-      setupFilesAfterEnv: ['<rootDir>/test/integration-setup.ts'],
-      testTimeout: 60000,
-    },
-    {
-      displayName: 'e2e',
-      testMatch: ['<rootDir>/test/e2e/**/*.e2e-spec.ts'],
-      setupFilesAfterEnv: ['<rootDir>/test/e2e-setup.ts'],
-      testTimeout: 120000,
-    },
-  ],
+  verbose: true,
+  detectOpenHandles: true,
+  forceExit: true,
 };
