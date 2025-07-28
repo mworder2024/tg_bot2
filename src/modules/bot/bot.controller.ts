@@ -1,28 +1,29 @@
-import { Controller, Post, Body, Get, Param, Logger } from '@nestjs/common';
-import { MockBotService } from './mock-bot.service';
+import { Controller, Post, Body, Get, Param, Logger } from "@nestjs/common";
+import { MockBotService } from "./mock-bot.service";
 
 /**
  * Bot Controller for testing bot commands via HTTP
  * Useful when Telegram API is not accessible
  */
-@Controller('bot')
+@Controller("bot")
 export class BotController {
   private readonly logger = new Logger(BotController.name);
 
   constructor(private readonly mockBotService: MockBotService) {}
 
-  @Get('health')
+  @Get("health")
   health() {
     return {
-      status: 'ok',
-      service: 'MockBotService',
-      message: 'Bot commands can be tested through these endpoints',
+      status: "ok",
+      service: "MockBotService",
+      message: "Bot commands can be tested through these endpoints",
     };
   }
 
-  @Post('command')
+  @Post("command")
   async processCommand(
-    @Body() body: {
+    @Body()
+    body: {
       telegramId: number;
       username: string;
       command: string;
@@ -30,9 +31,9 @@ export class BotController {
     },
   ) {
     const { telegramId, username, command, args } = body;
-    
+
     this.logger.log(`Processing command: ${command} from user ${username}`);
-    
+
     const response = await this.mockBotService.processCommand(
       telegramId,
       username,
@@ -48,10 +49,11 @@ export class BotController {
     };
   }
 
-  @Post('test/:command')
+  @Post("test/:command")
   async testCommand(
-    @Param('command') command: string,
-    @Body() body: {
+    @Param("command") command: string,
+    @Body()
+    body: {
       telegramId?: number;
       username?: string;
       args?: string[];
@@ -59,8 +61,8 @@ export class BotController {
   ) {
     // Use default test user if not provided
     const telegramId = body.telegramId || 123456789;
-    const username = body.username || 'testuser';
-    
+    const username = body.username || "testuser";
+
     const response = await this.mockBotService.processCommand(
       telegramId,
       username,

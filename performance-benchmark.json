@@ -1,0 +1,81 @@
+{
+  "timestamp": "2025-07-28T10:29:35.053Z",
+  "results": [
+    {
+      "testName": "String Operations",
+      "iterations": 100000,
+      "totalTime": 27.956173000000035,
+      "averageTime": 0.00027956173000000034,
+      "opsPerSecond": 3577027.5137444553,
+      "memoryUsage": {
+        "rss": 285569024,
+        "heapTotal": 203800576,
+        "heapUsed": 166526024,
+        "external": 7538811,
+        "arrayBuffers": 4860879
+      }
+    },
+    {
+      "testName": "Array Operations",
+      "iterations": 10000,
+      "totalTime": 47.80737199999999,
+      "averageTime": 0.0047807371999999985,
+      "opsPerSecond": 209172.76105450856,
+      "memoryUsage": {
+        "rss": 285700096,
+        "heapTotal": 203800576,
+        "heapUsed": 181923528,
+        "external": 7538811,
+        "arrayBuffers": 4860879
+      }
+    },
+    {
+      "testName": "Object Operations",
+      "iterations": 50000,
+      "totalTime": 24.190393000000086,
+      "averageTime": 0.0004838078600000017,
+      "opsPerSecond": 2066936.2420031715,
+      "memoryUsage": {
+        "rss": 285700096,
+        "heapTotal": 203800576,
+        "heapUsed": 167140360,
+        "external": 7538811,
+        "arrayBuffers": 4860879
+      }
+    },
+    {
+      "testName": "File Operations",
+      "iterations": 100,
+      "totalTime": 4.1479340000000775,
+      "averageTime": 0.041479340000000774,
+      "opsPerSecond": 24108.38745264465,
+      "memoryUsage": {
+        "rss": 286486528,
+        "heapTotal": 203800576,
+        "heapUsed": 167237224,
+        "external": 7538811,
+        "arrayBuffers": 4860879
+      }
+    },
+    {
+      "testName": "CPU Intensive Operations",
+      "iterations": 1000,
+      "totalTime": 155.02873599999998,
+      "averageTime": 0.15502873599999997,
+      "opsPerSecond": 6450.417037522645,
+      "memoryUsage": {
+        "rss": 286617600,
+        "heapTotal": 203800576,
+        "heapUsed": 171121672,
+        "external": 7538811,
+        "arrayBuffers": 4860879
+      }
+    }
+  ],
+  "summary": {
+    "totalOperations": 161100,
+    "totalTime": 259.13060800000017,
+    "averageOpsPerSecond": 1176739.0642584604,
+    "peakMemoryUsage": 181923528
+  }
+}

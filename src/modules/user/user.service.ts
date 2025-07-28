@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../../entities/user.entity';
-import { UserStats } from '../../entities/user-stats.entity';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { User } from "../../entities/user.entity";
+import { UserStats } from "../../entities/user-stats.entity";
 
 @Injectable()
 export class UserService {
@@ -48,11 +48,11 @@ export class UserService {
   async findByTelegramId(telegramId: number): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { telegramId },
-      relations: ['stats'],
+      relations: ["stats"],
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     return user;
@@ -61,11 +61,11 @@ export class UserService {
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['stats'],
+      relations: ["stats"],
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     return user;
@@ -73,8 +73,8 @@ export class UserService {
 
   async getAllUsers(): Promise<User[]> {
     return this.userRepository.find({
-      relations: ['stats'],
-      order: { createdAt: 'DESC' },
+      relations: ["stats"],
+      order: { createdAt: "DESC" },
     });
   }
 }

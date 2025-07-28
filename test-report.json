@@ -1,0 +1,122 @@
+{
+  "timestamp": "2025-07-28T10:27:53.338Z",
+  "summary": {
+    "totalTests": 7,
+    "passedTests": 5,
+    "failedTests": 2,
+    "successRate": 71.42857142857143
+  },
+  "benchmarks": [
+    {
+      "testType": "Unit Tests",
+      "totalTests": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "averageTestTime": 669.7682116666666,
+      "totalDuration": 2009.3046349999997,
+      "coverage": {
+        "lines": 0,
+        "functions": 0,
+        "branches": 0,
+        "statements": 0
+      }
+    },
+    {
+      "testType": "Integration Tests",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "averageTestTime": 0.18801900000016758,
+      "totalDuration": 0.18801900000016758,
+      "coverage": {
+        "lines": 0,
+        "functions": 0,
+        "branches": 0,
+        "statements": 0
+      }
+    },
+    {
+      "testType": "E2E Tests",
+      "totalTests": 0,
+      "passedTests": 0,
+      "failedTests": 0,
+      "averageTestTime": 2939.4729199999997,
+      "totalDuration": 2939.4729199999997,
+      "coverage": {
+        "lines": 0,
+        "functions": 0,
+        "branches": 0,
+        "statements": 0
+      }
+    },
+    {
+      "testType": "Performance Tests",
+      "totalTests": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "averageTestTime": 1.731377999999495,
+      "totalDuration": 1.731377999999495,
+      "coverage": {
+        "lines": 0,
+        "functions": 0,
+        "branches": 0,
+        "statements": 0
+      }
+    },
+    {
+      "testType": "Code Quality",
+      "totalTests": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "averageTestTime": 4075.1376340000006,
+      "totalDuration": 4075.1376340000006,
+      "coverage": {
+        "lines": 0,
+        "functions": 0,
+        "branches": 0,
+        "statements": 0
+      }
+    }
+  ],
+  "results": [
+    {
+      "name": "user.entity",
+      "passed": true,
+      "duration": 0.0813029999999344
+    },
+    {
+      "name": "game.entity",
+      "passed": true,
+      "duration": 0.06377500000007785
+    },
+    {
+      "name": "user-stats.entity",
+      "passed": true,
+      "duration": 0.04820500000005268
+    },
+    {
+      "name": "tournament.integration",
+      "passed": true,
+      "duration": 0
+    },
+    {
+      "name": "Performance Benchmark",
+      "passed": true,
+      "duration": 1.4894029999995837
+    },
+    {
+      "name": "Linting",
+      "passed": false,
+      "duration": 0,
+      "errors": [
+        "ESLint check failed: Command failed: npm run lint"
+      ]
+    },
+    {
+      "name": "Code Coverage Analysis",
+      "passed": false,
+      "duration": 0,
+      "coverage": 25
+    }
+  ]
+}

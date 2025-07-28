@@ -1,14 +1,14 @@
-import * as Joi from 'joi';
+import * as Joi from "joi";
 
 /**
  * Environment configuration validation schema
- * 
+ *
  * @description Joi schema for validating environment variables to ensure:
  * - Required variables are present
  * - Data types are correct
  * - Values are within acceptable ranges
  * - Security requirements are met
- * 
+ *
  * @example
  * ```typescript
  * // Automatically used by ConfigModule in app.module.ts
@@ -17,110 +17,101 @@ import * as Joi from 'joi';
  *   validationOptions: { abortEarly: false }
  * })
  * ```
- * 
+ *
  * @since 1.0.0
  * @see {@link AppModule} for configuration setup
  */
 export const configValidation = Joi.object({
   // Application Configuration
   NODE_ENV: Joi.string()
-    .valid('development', 'production', 'test', 'staging')
-    .default('development')
-    .description('Application environment'),
-    
-  PORT: Joi.number()
-    .port()
-    .default(3000)
-    .description('Application port'),
-    
+    .valid("development", "production", "test", "staging")
+    .default("development")
+    .description("Application environment"),
+
+  PORT: Joi.number().port().default(3000).description("Application port"),
+
   APP_NAME: Joi.string()
-    .default('RPS Tournament Bot')
-    .description('Application name'),
-    
+    .default("RPS Tournament Bot")
+    .description("Application name"),
+
   APP_VERSION: Joi.string()
     .pattern(/^\d+\.\d+\.\d+$/)
-    .default('1.0.0')
-    .description('Application version (semver)'),
+    .default("1.0.0")
+    .description("Application version (semver)"),
 
   // Database Configuration
   DATABASE_URL: Joi.string()
-    .uri({ scheme: 'postgresql' })
+    .uri({ scheme: "postgresql" })
     .required()
-    .description('PostgreSQL connection URL'),
-    
+    .description("PostgreSQL connection URL"),
+
   DATABASE_HOST: Joi.string()
     .hostname()
-    .default('localhost')
-    .description('Database host'),
-    
-  DATABASE_PORT: Joi.number()
-    .port()
-    .default(5432)
-    .description('Database port'),
-    
+    .default("localhost")
+    .description("Database host"),
+
+  DATABASE_PORT: Joi.number().port().default(5432).description("Database port"),
+
   DATABASE_USERNAME: Joi.string()
     .alphanum()
     .min(3)
     .max(63)
     .required()
-    .description('Database username'),
-    
+    .description("Database username"),
+
   DATABASE_PASSWORD: Joi.string()
     .min(8)
     .required()
-    .description('Database password'),
-    
+    .description("Database password"),
+
   DATABASE_NAME: Joi.string()
     .alphanum()
     .min(3)
     .max(63)
     .required()
-    .description('Database name'),
+    .description("Database name"),
 
   // Redis Configuration
   REDIS_URL: Joi.string()
-    .uri({ scheme: 'redis' })
-    .default('redis://localhost:6379')
-    .description('Redis connection URL'),
-    
+    .uri({ scheme: "redis" })
+    .default("redis://localhost:6379")
+    .description("Redis connection URL"),
+
   REDIS_HOST: Joi.string()
     .hostname()
-    .default('localhost')
-    .description('Redis host'),
-    
-  REDIS_PORT: Joi.number()
-    .port()
-    .default(6379)
-    .description('Redis port'),
-    
+    .default("localhost")
+    .description("Redis host"),
+
+  REDIS_PORT: Joi.number().port().default(6379).description("Redis port"),
+
   REDIS_PASSWORD: Joi.string()
-    .allow('')
-    .description('Redis password (optional)'),
+    .allow("")
+    .description("Redis password (optional)"),
 
   // Telegram Bot Configuration
   BOT_TOKEN: Joi.string()
     .pattern(/^\d+:[A-Za-z0-9_-]{35}$/)
     .required()
-    .description('Telegram Bot API token'),
-    
+    .description("Telegram Bot API token"),
+
   BOT_WEBHOOK_URL: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .description('Bot webhook URL'),
-    
+    .uri({ scheme: ["http", "https"] })
+    .description("Bot webhook URL"),
+
   BOT_WEBHOOK_SECRET: Joi.string()
     .min(16)
-    .description('Bot webhook secret token'),
+    .description("Bot webhook secret token"),
 
   // JWT Configuration
   JWT_SECRET: Joi.string()
     .min(32)
     .required()
-    .description('JWT secret key (minimum 32 characters)'),
-    
+    .description("JWT secret key (minimum 32 characters)"),
+
   JWT_EXPIRES_IN: Joi.string()
     .pattern(/^\d+[smhd]$/)
-    .default('24h')
-    .description('JWT expiration time (e.g., 24h, 7d)'),
+    .default("24h")
+    .description("JWT expiration time (e.g., 24h, 7d)"),
 
   // Rate Limiting Configuration
   RATE_LIMIT_TTL: Joi.number()
@@ -128,14 +119,14 @@ export const configValidation = Joi.object({
     .min(1)
     .max(3600)
     .default(60)
-    .description('Rate limit time window in seconds'),
-    
+    .description("Rate limit time window in seconds"),
+
   RATE_LIMIT_LIMIT: Joi.number()
     .integer()
     .min(1)
     .max(10000)
     .default(100)
-    .description('Rate limit maximum requests per window'),
+    .description("Rate limit maximum requests per window"),
 
   // Security Configuration
   BCRYPT_ROUNDS: Joi.number()
@@ -143,24 +134,24 @@ export const configValidation = Joi.object({
     .min(10)
     .max(15)
     .default(12)
-    .description('Bcrypt hash rounds'),
-    
+    .description("Bcrypt hash rounds"),
+
   CORS_ORIGIN: Joi.string()
     .uri()
-    .default('http://localhost:3001')
-    .description('CORS allowed origin'),
+    .default("http://localhost:3001")
+    .description("CORS allowed origin"),
 
   // Admin Configuration
   ADMIN_TELEGRAM_IDS: Joi.string()
     .pattern(/^\d+(,\d+)*$/)
     .required()
-    .description('Comma-separated admin Telegram IDs'),
-    
+    .description("Comma-separated admin Telegram IDs"),
+
   SUPER_ADMIN_ID: Joi.number()
     .integer()
     .positive()
     .required()
-    .description('Super admin Telegram ID'),
+    .description("Super admin Telegram ID"),
 
   // Tournament Configuration
   MAX_CONCURRENT_TOURNAMENTS: Joi.number()
@@ -168,24 +159,24 @@ export const configValidation = Joi.object({
     .min(1)
     .max(1000)
     .default(50)
-    .description('Maximum concurrent tournaments'),
-    
+    .description("Maximum concurrent tournaments"),
+
   DEFAULT_TOURNAMENT_TIMEOUT: Joi.number()
     .integer()
     .min(60)
     .max(3600)
     .default(300)
-    .description('Default tournament timeout in seconds'),
-    
+    .description("Default tournament timeout in seconds"),
+
   MAX_PLAYERS_PER_TOURNAMENT: Joi.number()
     .valid(64)
     .default(64)
-    .description('Maximum players per tournament'),
-    
+    .description("Maximum players per tournament"),
+
   MIN_PLAYERS_PER_TOURNAMENT: Joi.number()
     .valid(4)
     .default(4)
-    .description('Minimum players per tournament'),
+    .description("Minimum players per tournament"),
 
   // Game Configuration
   GAME_ROUND_TIMEOUT: Joi.number()
@@ -193,74 +184,74 @@ export const configValidation = Joi.object({
     .min(10)
     .max(300)
     .default(30)
-    .description('Game round timeout in seconds'),
-    
+    .description("Game round timeout in seconds"),
+
   MAX_GAME_ROUNDS: Joi.number()
     .integer()
     .valid(3, 5, 7)
     .default(3)
-    .description('Maximum rounds per game (best-of-N)'),
-    
+    .description("Maximum rounds per game (best-of-N)"),
+
   GAME_MOVE_TIMEOUT: Joi.number()
     .integer()
     .min(5)
     .max(120)
     .default(30)
-    .description('Player move timeout in seconds'),
+    .description("Player move timeout in seconds"),
 
   // Logging Configuration
   LOG_LEVEL: Joi.string()
-    .valid('error', 'warn', 'info', 'debug', 'verbose')
-    .default('info')
-    .description('Application log level'),
-    
+    .valid("error", "warn", "info", "debug", "verbose")
+    .default("info")
+    .description("Application log level"),
+
   LOG_FORMAT: Joi.string()
-    .valid('json', 'simple', 'combined')
-    .default('json')
-    .description('Log output format'),
+    .valid("json", "simple", "combined")
+    .default("json")
+    .description("Log output format"),
 
   // Monitoring Configuration
   PROMETHEUS_METRICS_ENABLED: Joi.boolean()
     .default(true)
-    .description('Enable Prometheus metrics collection'),
-    
+    .description("Enable Prometheus metrics collection"),
+
   PROMETHEUS_METRICS_PORT: Joi.number()
     .port()
     .default(9090)
-    .description('Prometheus metrics server port'),
-    
+    .description("Prometheus metrics server port"),
+
   HEALTH_CHECK_ENABLED: Joi.boolean()
     .default(true)
-    .description('Enable health check endpoints'),
+    .description("Enable health check endpoints"),
 
   // Bull Queue Configuration
   BULL_REDIS_HOST: Joi.string()
     .hostname()
-    .default('localhost')
-    .description('Bull queue Redis host'),
-    
+    .default("localhost")
+    .description("Bull queue Redis host"),
+
   BULL_REDIS_PORT: Joi.number()
     .port()
     .default(6379)
-    .description('Bull queue Redis port'),
-    
+    .description("Bull queue Redis port"),
+
   BULL_REDIS_PASSWORD: Joi.string()
-    .allow('')
-    .description('Bull queue Redis password (optional)')
+    .allow("")
+    .description("Bull queue Redis password (optional)"),
 });
 
 /**
  * Configuration interface for type safety
- * 
+ *
  * @description TypeScript interface derived from Joi schema to provide
  * type safety when accessing configuration values throughout the application
- * 
+ *
  * @example
  * ```typescript
  * @Injectable()
  * class MyService {
  *   constructor(private configService: ConfigService<ConfigInterface>) {}
- *   
+ *
  *   getDbUrl(): string {
  *     return this.configService.get('DATABASE_URL'); // Type-safe access
  *   }
@@ -269,7 +260,7 @@ export const configValidation = Joi.object({
  */
 export interface ConfigInterface {
   // Application
-  NODE_ENV: 'development' | 'production' | 'test' | 'staging';
+  NODE_ENV: "development" | "production" | "test" | "staging";
   PORT: number;
   APP_NAME: string;
   APP_VERSION: string;
@@ -321,8 +312,8 @@ export interface ConfigInterface {
   GAME_MOVE_TIMEOUT: number;
 
   // Logging
-  LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug' | 'verbose';
-  LOG_FORMAT: 'json' | 'simple' | 'combined';
+  LOG_LEVEL: "error" | "warn" | "info" | "debug" | "verbose";
+  LOG_FORMAT: "json" | "simple" | "combined";
 
   // Monitoring
   PROMETHEUS_METRICS_ENABLED: boolean;

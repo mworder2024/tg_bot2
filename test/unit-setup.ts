@@ -21,7 +21,7 @@ afterAll(() => {
 });
 
 // Global test utilities
-global.testUtils = {
+(global as any).testUtils = {
   sleep: (ms: number) => new Promise(resolve => setTimeout(resolve, ms)),
   generateId: () => `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   createMockLogger: () => ({
